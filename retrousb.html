@@ -15,6 +15,10 @@
   <p>
 
   <input id="loader" type="file">
+  <br>
+  <label><input type="checkbox" id="sound">Sound</label>
+  <br>
+  <label><input type="checkbox" id="size">2x</label>
 
   <script src="lib/dynamicaudio-min.js"></script>
   <script src="source/nes.js"></script>
@@ -28,9 +32,10 @@
   <script src="source/retrousbcontroller.js"></script>
   <script src="source/retrousbui.js"></script>
   <script>
+  var canvas = document.getElementById('nes-screen');
   var nes = new JSNES({
     ui: JSNES.RetroUsbUi,
-    'canvasElement': document.getElementById('nes-screen'),
+    'canvasElement': canvas,
   });
 
   // Automatically load one of the ROMs in the repository.
@@ -62,6 +67,19 @@
   }
 
   document.getElementById('loader').addEventListener('change', onFileSelect, false);
+
+  document.getElementById('sound').addEventListener('change', function(event) {
+    var enableSound = event.target.checked;
+    self.nes.opts.emulateSound = enableSound;
+  }, false);
+
+  document.getElementById('size').addEventListener('change', function(event) {
+    var enable2x = event.target.checked;
+    var width = enable2x ? 512 : 256;
+    var height = enable2x ? 480 : 240;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
+  }, false);
   </script>
 
 </body>
