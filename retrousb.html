@@ -1,0 +1,47 @@
+<!doctype html>
+<html>
+<head>
+  <title>JSNES with RetroUSB Test Page</title>
+</head>
+<body>
+
+  Test Page for <a href="http://www.retrousb.com/product_info.php?cPath=21&products_id=28">USB
+  NES RetroPort</a> integration with <a href="http://fir.sh/projects/jsnes/">JSNES</a>.
+
+  <p>
+
+  <canvas id="nes-screen" width="256" height="240"></canvas>
+
+  <script src="lib/dynamicaudio-min.js"></script>
+  <script src="source/nes.js"></script>
+  <script src="source/utils.js"></script>
+  <script src="source/cpu.js"></script>
+  <script src="source/keyboard.js"></script>
+  <script src="source/mappers.js"></script>
+  <script src="source/papu.js"></script>
+  <script src="source/ppu.js"></script>
+  <script src="source/rom.js"></script>
+  <script src="source/retrousbcontroller.js"></script>
+  <script src="source/retrousbui.js"></script>
+  <script>
+  var nes = new JSNES({
+    ui: JSNES.RetroUsbUi,
+    'canvasElement': document.getElementById('nes-screen'),
+  });
+
+  // Automatically load one of the ROMs in the repository.
+  var xhr = new XMLHttpRequest();
+  xhr.overrideMimeType('text/plain; charset=x-user-defined');
+  xhr.onreadystatechange = function() {
+    if (xhr.readyState === 4) {
+      nes.loadRom(xhr.responseText);
+      nes.start();
+    }
+  };
+  
+  xhr.open('GET', 'roms/lj65/lj65.nes', /* async */ true);
+  xhr.send();
+  </script>
+
+</body>
+</html>
