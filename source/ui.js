@@ -22,6 +22,8 @@ JSNES.DummyUI = function(nes) {
     this.updateStatus = function() {};
     this.writeAudio = function() {};
     this.writeFrame = function() {};
+    this.getController1 = function() {};
+    this.getController2 = function() {};
 };
 
 if (typeof jQuery !== 'undefined') {
@@ -32,6 +34,19 @@ if (typeof jQuery !== 'undefined') {
                 var self = this;
                 self.nes = nes;
                 
+                var keyboard = new JSNES.Keyboard();
+                self.keyboard = keyboard;
+                self.controller1 = {
+                  getButtonState: function(button) {
+                    return keyboard.state1[button];
+                  },
+                };
+                self.controller2 = {
+                  getButtonState: function(button) {
+                    return keyboard.state2[button];
+                  },
+                };
+
                 /*
                  * Create UI
                  */
@@ -159,13 +174,13 @@ if (typeof jQuery !== 'undefined') {
                  */
                 $(document).
                     bind('keydown', function(evt) {
-                        self.nes.keyboard.keyDown(evt); 
+                        self.keyboard.keyDown(evt); 
                     }).
                     bind('keyup', function(evt) {
-                        self.nes.keyboard.keyUp(evt); 
+                        self.keyboard.keyUp(evt); 
                     }).
                     bind('keypress', function(evt) {
-                        self.nes.keyboard.keyPress(evt);
+                        self.keyboard.keyPress(evt);
                     });
             
                 /*
@@ -247,6 +262,14 @@ if (typeof jQuery !== 'undefined') {
                     this.status.text(s);
                 },
         
+                getController1: function() {
+                  return this.controller1;
+                },
+
+                getController2: function() {
+                  return this.controller2;
+                },
+
                 setRoms: function(roms) {
                     this.romSelect.children().remove();
                     $("<option>Select a ROM...</option>").appendTo(this.romSelect);

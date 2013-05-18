@@ -47,20 +47,9 @@ var JSNES = function(opts) {
     this.ppu = new JSNES.PPU(this);
     this.papu = new JSNES.PAPU(this);
     this.mmap = null; // set in loadRom()
-    
-    var keyboard = new JSNES.Keyboard();
-    this.keyboard = keyboard;
-    
-    this.controller1 = {
-      getButtonState: function(button) {
-        return keyboard.state1[button];
-      },
-    };
-    this.controller2 = {
-      getButtonState: function(button) {
-        return keyboard.state2[button];
-      },
-    };
+
+    this.controller1 = this.ui.getController1();
+    this.controller2 = this.ui.getController2();
 
     this.ui.updateStatus("Ready to load a ROM.");
 };
