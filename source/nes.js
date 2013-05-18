@@ -47,8 +47,21 @@ var JSNES = function(opts) {
     this.ppu = new JSNES.PPU(this);
     this.papu = new JSNES.PAPU(this);
     this.mmap = null; // set in loadRom()
-    this.keyboard = new JSNES.Keyboard();
     
+    var keyboard = new JSNES.Keyboard();
+    this.keyboard = keyboard;
+    
+    this.controller1 = {
+      getButtonState: function(button) {
+        return keyboard.state1[button];
+      },
+    };
+    this.controller2 = {
+      getButtonState: function(button) {
+        return keyboard.state2[button];
+      },
+    };
+
     this.ui.updateStatus("Ready to load a ROM.");
 };
 
@@ -159,6 +172,11 @@ JSNES.prototype = {
         }
         this.fpsFrameCount++;
         this.lastFrameTime = +new Date();
+    },
+    
+    getButtonPress: function(controllerId, buttonId) {
+      var controller = controllerId == 1 ? this.controller1 : this.controller2;
+      return controller.getButtonState(buttonId);
     },
     
     printFps: function() {

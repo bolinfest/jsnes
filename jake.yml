@@ -15,6 +15,7 @@ packages:
   jsnes:
     header: header.js
     files:
+      - controller
       - nes
       - utils
       - cpu
