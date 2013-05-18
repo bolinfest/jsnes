@@ -12,6 +12,10 @@
 
   <canvas id="nes-screen" width="256" height="240"></canvas>
 
+  <p>
+
+  <input id="loader" type="file">
+
   <script src="lib/dynamicaudio-min.js"></script>
   <script src="source/nes.js"></script>
   <script src="source/utils.js"></script>
@@ -41,6 +45,23 @@
   
   xhr.open('GET', 'roms/lj65/lj65.nes', /* async */ true);
   xhr.send();
+
+  function onFileSelect(event) {
+    var files = event.target.files;
+    if (files.length != 1) {
+      console.error('Unexpected number of files: ' + files.length);
+    }
+
+    var rom = files[0];
+    var reader = new FileReader();
+    reader.onload = function(event) {
+      nes.loadRom(event.target.result);
+      nes.start();
+    };
+    reader.readAsBinaryString(rom);
+  }
+
+  document.getElementById('loader').addEventListener('change', onFileSelect, false);
   </script>
 
 </body>
