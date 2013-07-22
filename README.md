@@ -8,6 +8,7 @@ My fork of [JSNES](http://fir.sh/projects/jsnes/) that adds support for:
     Other gamepads presumably work, but I have only tested with the
     RetroPort.
   * Loading local ROMs.
+  * Loading ROMs from Dropbox.
 
 If you look at the outstanding [pull requests](https://github.com/bfirsh/jsnes/pulls)
 to the main project, you can see that these are the most popular types of patches that
