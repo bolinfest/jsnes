@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-  <title>JSNES with RetroUSB Test Page</title>
+  <title>JSNES with RetroUSB</title>
   <style>
 body {
   font-family: Helvetica, Arial, sans-serif;
@@ -50,25 +50,32 @@ body {
 <div id="dropbox-loading">Loading...</div>
 
 <div id="content">
-  Test Page for <a href="http://www.retrousb.com/product_info.php?cPath=21&products_id=28">USB
-  NES RetroPort</a> integration with <a href="http://fir.sh/projects/jsnes/">JSNES</a>.
+  This is a modified version of <a href="http://fir.sh/projects/jsnes/" target="_blank">JSNES</a>
+  that lets you play using <a href="http://www.retrousb.com/product_info.php?cPath=21&products_id=28" target="_blank">USB
+  NES RetroPort</a> controllers instead of the keyboard
+  <p>
+  See <a href="http://blog.bolinfest.com/2013/05/chromebook-pixel-gives-me-excuse-to.html" target="_blank">my blog post</a>
+  for details.
 
+  <!-- TODO(bolinfest): Add support for keyboard-only mode.
+  <p>
+  <button id="no-joystick">I do not have RetroPort controllers</button>
+  -->
   <p>
 
   <canvas id="nes-screen" width="256" height="240"></canvas>
 
   <p>
 
-  <input id="loader" type="file">
-  <br>
   <label><input type="checkbox" id="sound">Sound</label>
   <br>
   <label><input type="checkbox" id="size">2x</label>
 
-  </p>
+  <h3>Option 1: Load a ROM from local disk.</h3>
+  <input id="loader" type="file">
 
+  <h3>Option 2: Load a ROM from your Dropbox.</h3>
   Path to ROMs in your Dropbox: <input id="dropbox-path" value="/nes_roms/"> <div id="dropbox-chooser"></div>
-
   <div id="dropbox-select">
   Enter the name of the ROM you want to load: <input id="dropbox-select-input">
   </div>
@@ -91,6 +98,25 @@ body {
   var nes = new JSNES({
     ui: JSNES.RetroUsbUi,
     'canvasElement': canvas,
+  });
+
+  var isKeyboardAdded = false;
+  $('#no-joystick').click(function(event) {
+    if (isKeyboardAdded) return;
+    isKeyboardAdded = true;
+
+    var script = document.createElement('script');
+    script.src = 'source/ui.js';
+    document.body.appendChild(script);
+
+    // After ui.js has loaded, redefine the global nes object.
+    setTimeout(function() {
+      console.log('loaded');
+      nes = new JSNES({
+        ui: JSNES.RetroUsbUi,
+        'canvasElement': canvas,
+      });
+    }, 2000);
   });
 
   // Automatically load one of the ROMs in the repository.
