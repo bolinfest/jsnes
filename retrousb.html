@@ -2,9 +2,54 @@
 <html>
 <head>
   <title>JSNES with RetroUSB Test Page</title>
+  <style>
+body {
+  font-family: Helvetica, Arial, sans-serif;
+  font-size: 13px;
+}
+
+#content {
+  margin: 8px;  
+}
+
+#dropbox-loading {
+  position: absolute;
+  top: 0;
+  right: 0;
+  color: white;
+  background-color: #A00;
+  padding: 5px;
+  display: none;
+}
+
+#dropbox-path {
+  margin-bottom: 0;
+}
+
+#dropbox-chooser {
+  background-image: url('//www.dropbox.com/static/images/widgets/chooser-button-sprites.png');
+  display: inline-block;
+  vertical-align: bottom;
+  width: 152px;
+  height: 25px;
+  cursor: pointer;
+}
+
+#dropbox-select {
+  display: none;
+  margin-top: 1em;
+}
+
+#dropbox-select-input {
+  width: 400px;
+}
+  </style>
+  <link rel="stylesheet" type="text/css" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/themes/smoothness/jquery-ui.css">
 </head>
 <body>
+<div id="dropbox-loading">Loading...</div>
 
+<div id="content">
   Test Page for <a href="http://www.retrousb.com/product_info.php?cPath=21&products_id=28">USB
   NES RetroPort</a> integration with <a href="http://fir.sh/projects/jsnes/">JSNES</a>.
 
@@ -20,6 +65,14 @@
   <br>
   <label><input type="checkbox" id="size">2x</label>
 
+  </p>
+
+  Path to ROMs in your Dropbox: <input id="dropbox-path" value="/nes_roms/"> <div id="dropbox-chooser"></div>
+
+  <div id="dropbox-select">
+  Enter the name of the ROM you want to load: <input id="dropbox-select-input">
+  </div>
+
   <script src="lib/dynamicaudio-min.js"></script>
   <script src="source/nes.js"></script>
   <script src="source/utils.js"></script>
@@ -31,25 +84,29 @@
   <script src="source/rom.js"></script>
   <script src="source/retrousbcontroller.js"></script>
   <script src="source/retrousbui.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
   <script>
-  var canvas = document.getElementById('nes-screen');
+  var canvas = $('#nes-screen').get(0);
   var nes = new JSNES({
     ui: JSNES.RetroUsbUi,
     'canvasElement': canvas,
   });
 
   // Automatically load one of the ROMs in the repository.
-  var xhr = new XMLHttpRequest();
-  xhr.overrideMimeType('text/plain; charset=x-user-defined');
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      nes.loadRom(xhr.responseText);
-      nes.start();
-    }
+  var fetch = function(url) {
+    var xhr = new XMLHttpRequest();
+    xhr.overrideMimeType('text/plain; charset=x-user-defined');
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+        nes.loadRom(xhr.responseText);
+        nes.start();
+      }
+    };
+    
+    xhr.open('GET', url, /* async */ true);
+    xhr.send();
   };
-  
-  xhr.open('GET', 'roms/lj65/lj65.nes', /* async */ true);
-  xhr.send();
 
   function onFileSelect(event) {
     var files = event.target.files;
@@ -66,21 +123,112 @@
     reader.readAsBinaryString(rom);
   }
 
-  document.getElementById('loader').addEventListener('change', onFileSelect, false);
+  $('#loader').change(onFileSelect);
 
-  document.getElementById('sound').addEventListener('change', function(event) {
+  $('#sound').change(function(event) {
     var enableSound = event.target.checked;
     self.nes.opts.emulateSound = enableSound;
-  }, false);
+  });
 
-  document.getElementById('size').addEventListener('change', function(event) {
+  $('#size').change(function(event) {
     var enable2x = event.target.checked;
     var width = enable2x ? 512 : 256;
     var height = enable2x ? 480 : 240;
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
-  }, false);
+  });
+  </script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/dropbox.js/0.10.0/dropbox.min.js"></script>
+  <script>
+  // TODO(mbolin): Consider heavily leveraging Dropbox's Datastore API:
+  //
+  // https://www.dropbox.com/developers/datastore
+  //
+  // To store things such as:
+  // - most recently played games
+  // - saved ROMs
+  //
+  // Alternatively, use localStorage for these items.
+
+  var dropboxClient;
+
+  var showLoading = function(loading) {
+    // TODO(bolinfest): Create a better loading indicator.
+    // This is an homage to the old Gmail loading indicator.
+    $('#dropbox-loading').get(0).style.display = loading ? 'block' : 'none';
+  };
+
+  /**
+   * @return {boolean} true if there was an error
+   */
+  var processError = function(error) {
+    if (error) {
+      // TODO(bolinfest): Provide a better error message.
+      alert('Unexpected error');
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  var onDropboxSelect = function(path) {
+    showLoading(true);
+    dropboxClient.readFile(path, { 'binary': true }, function(error, data) {
+      try {
+        if (processError(error)) return;
+
+        nes.loadRom(data);
+        nes.start();
+      } finally {
+        showLoading(false);
+      }
+    });
+  };
+
+  var openChooser = function() {
+    // TODO(bolinfest): Present a file chooser rather than a textual input.
+    var path = $('#dropbox-path').val();
+    dropboxClient.readdir(path, function(error, entries) {
+      try {
+        if (error) {
+          alert('Make sure the path "' + path + '" exists in your Dropbox.'); 
+          return;
+        }
+
+        // Insert autocomplete for ROM names.
+        $('#dropbox-select').show();
+        $('#dropbox-select-input').autocomplete({
+          'source': entries,
+          'select': function(event, ui) {
+            var value = ui.item && ui.item.value;
+            if (value) {
+              onDropboxSelect(path + value);
+            }
+          },
+        });
+      } finally {
+        showLoading(false);
+      }
+    });
+  };
+
+  var handleAuth = function(error, client) {
+    if (processError(error)) return;
+
+    dropboxClient = client;
+    openChooser();
+  };
+
+  $('#dropbox-chooser').click(function(event) {
+    if (dropboxClient) {
+      openChooser();
+    } else {
+      showLoading(true);
+      new Dropbox.Client({ 'key': 's7by8qbtfz8h48d' }).authenticate(handleAuth);
+    }
+  });
   </script>
 
+</div> <!-- content -->
 </body>
 </html>
